@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DrishtiAI – Upload</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo">Drishti<span>AI</span></div>
+    <div id="user-info" style="font-size:13px;color:#7a8aab;"></div>
+  </nav>
+
+  <div class="container" style="max-width:600px;">
+    <div class="card">
+      <h1>Upload Retinal Image 🔬</h1>
+      <p class="subtitle">Upload a fundus photograph for AI-powered disease detection</p>
+
+      <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+        <div class="icon">📤</div>
+        <p>Click to upload or drag & drop</p>
+        <p style="margin-top:8px;font-size:13px;"><span>JPG, PNG, JPEG</span> supported</p>
+      </div>
+
+      <input type="file" id="file-input" accept=".jpg,.jpeg,.png" style="display:none;" onchange="handleFile(event)"/>
+
+      <div id="preview-box">
+        <img id="preview-img" src="" alt="Preview"/>
+        <p style="margin-top:10px;color:#66bb6a;font-size:13px;">✓ Image loaded successfully</p>
+      </div>
+
+      <button class="btn" onclick="analyzeImage()">Analyze Image →</button>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Analyzing retinal image with AI... please wait</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const user = JSON.parse(sessionStorage.getItem('drishti_user') || '{}');
+    if (!user.name) window.location.href = '/';
+    document.getElementById('user-info').textContent = user.name + ' · ' + user.role;
+
+    const uploadArea = document.getElementById('upload-area');
+    uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = '#4fc3f7'; });
+    uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = '#1e2a45'; });
+    uploadArea.addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if(f) loadPreview(f); });
+
+    function handleFile(e) { const f = e.target.files[0]; if(f) loadPreview(f); }
+
+    function loadPreview(file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById('preview-img').src = e.target.result;
+        document.getElementById('preview-box').style.display = 'block';
+        sessionStorage.setItem('drishti_image', e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function analyzeImage() {
+      const fileInput = document.getElementById('file-input');
+      const file = fileInput.files[0];
+      if (!file) { alert('Please upload a retinal image first.'); return; }
+
+      document.getElementById('loading').style.display = 'block';
+      document.querySelector('.btn').disabled = true;
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      fetch('/analyze', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+          sessionStorage.setItem('drishti_result', JSON.stringify(data));
+          window.location.href = '/result.html';
+        })
+        .catch(err => {
+          alert('Error connecting to backend. Make sure Flask is running.');
+          document.getElementById('loading').style.display = 'none';
+          document.querySelector('.btn').disabled = false;
+        });
+    }
+  </script>
+</body>
+</html>

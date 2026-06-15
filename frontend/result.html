@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DrishtiAI – Results</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo">Drishti<span>AI</span></div>
+    <div id="user-info" style="font-size:13px;color:#7a8aab;"></div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <h1>Diagnosis Result 📊</h1>
+      <p class="subtitle" id="timestamp"></p>
+
+      <div class="result-grid">
+        <div class="result-card">
+          <div class="label">Detected Disease</div>
+          <div class="value" id="disease">—</div>
+        </div>
+        <div class="result-card">
+          <div class="label">Confidence Score</div>
+          <div class="value" id="confidence">—</div>
+        </div>
+        <div class="result-card">
+          <div class="label">Severity Level</div>
+          <div class="value" id="severity">—</div>
+        </div>
+        <div class="result-card">
+          <div class="label">Recommendation</div>
+          <div class="value small" id="recommendation">—</div>
+        </div>
+      </div>
+
+      <div class="images-grid">
+        <div class="img-box">
+          <h3>Original Image</h3>
+          <img id="original-img" src="" alt="Original"/>
+        </div>
+        <div class="img-box">
+          <h3>Grad-CAM Heatmap</h3>
+          <img id="heatmap-img" src="" alt="Heatmap"/>
+        </div>
+      </div>
+
+      <button class="btn" onclick="downloadReport()">📄 Download Report</button>
+      <button class="btn-outline" onclick="window.location.href='/upload.html'">← Analyze Another Image</button>
+    </div>
+  </div>
+
+  <script>
+    const user = JSON.parse(sessionStorage.getItem('drishti_user') || '{}');
+    if (!user.name) window.location.href = '/';
+    document.getElementById('user-info').textContent = user.name + ' · ' + user.role;
+
+    const result = JSON.parse(sessionStorage.getItem('drishti_result') || '{}');
+    const disease = result.disease || 'Unknown';
+    const confidence = result.confidence ? result.confidence + '%' : '—';
+    const severity = result.severity || '—';
+    const recommendation = result.recommendation || '—';
+
+    document.getElementById('disease').textContent = disease;
+    document.getElementById('confidence').textContent = confidence;
+    document.getElementById('recommendation').textContent = recommendation;
+    document.getElementById('timestamp').textContent = 'Analyzed on ' + new Date().toLocaleString() + ' · Patient: ' + user.name;
+
+    const sevEl = document.getElementById('severity');
+    sevEl.textContent = severity;
+    sevEl.className = 'value ' + severity.toLowerCase();
+
+    const img = sessionStorage.getItem('drishti_image');
+    if (img) document.getElementById('original-img').src = img;
+    if (result.heatmap) document.getElementById('heatmap-img').src = 'data:image/png;base64,' + result.heatmap;
+
+    function downloadReport() {
+      const report = `DRISHTI AI — MEDICAL REPORT
+==============================
+Date        : ${new Date().toLocaleString()}
+Patient     : ${user.name}
+Role        : ${user.role}
+Institution : ${user.hospital}
+
+DIAGNOSIS
+---------
+Disease     : ${disease}
+Confidence  : ${confidence}
+Severity    : ${severity}
+
+RECOMMENDATION
+--------------
+${recommendation}
+
+Note: This report is AI-generated and must be reviewed by a certified ophthalmologist.
+`;
+      const blob = new Blob([report], {type: 'text/plain'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'DrishtiAI_Report_' + user.name.replace(/ /g,'_') + '.txt';
+      a.click();
+    }
+  </script>
+</body>
+</html>
