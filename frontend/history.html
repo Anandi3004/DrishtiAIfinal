@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DrishtiAI – History</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="brand">
+      <div class="brand-icon">👁️</div>
+      <div class="logo">Drishti<span>AI</span></div>
+    </div>
+    <div class="nav-right">
+      <div class="nav-links">
+        <a href="/upload.html">New Scan</a>
+        <a href="/history.html" class="active">History</a>
+      </div>
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar">A</div>
+        <span id="user-info"></span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page-wrap">
+    <div class="page-header">
+      <h1>Diagnosis History</h1>
+      <p>Review your past retinal scans and reports</p>
+    </div>
+
+    <div class="card">
+      <div class="history-list" id="history-list">
+        <div class="empty-state">
+          <div class="icon">⏳</div>
+          <p>Loading history…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const user = JSON.parse(sessionStorage.getItem('drishti_user') || '{}');
+    if (!user.name) window.location.href = '/';
+    document.getElementById('user-info').textContent = user.name;
+    document.getElementById('user-avatar').textContent = user.name.charAt(0).toUpperCase();
+
+    const severityEmoji = { Low: '✅', Moderate: '⚠️', High: '🔴' };
+
+    fetch('/history?patient_name=' + encodeURIComponent(user.name))
+      .then(res => res.json())
+      .then(data => {
+        const list = document.getElementById('history-list');
+        if (!data.length) {
+          list.innerHTML = `<div class="empty-state"><div class="icon">🗂️</div><p>No scans yet. Start your first analysis from "New Scan".</p></div>`;
+          return;
+        }
+        list.innerHTML = data.map(item => `
+          <div class="history-item" onclick="viewReport('${item.id}')">
+            <div class="h-left">
+              <div class="h-icon">${severityEmoji[item.severity] || '🩺'}</div>
+              <div>
+                <div class="h-disease">${item.disease}</div>
+                <div class="h-date">${new Date(item.created_at).toLocaleString()}</div>
+              </div>
+            </div>
+            <div class="h-right">
+              <span class="h-confidence">${item.confidence}%</span>
+              <span class="severity-badge ${item.severity.toLowerCase()}">${item.severity}</span>
+            </div>
+          </div>
+        `).join('');
+      })
+      .catch(() => {
+        document.getElementById('history-list').innerHTML =
+          `<div class="empty-state"><div class="icon">⚠️</div><p>Could not load history. Is the backend running?</p></div>`;
+      });
+
+    function viewReport(id) {
+      window.location.href = '/download-pdf/' + id;
+    }
+  </script>
+</body>
+</html>

@@ -3,40 +3,42 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DrishtiAI – Login</title>
+  <title>DrishtiAI – Sign In</title>
   <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-  <nav class="navbar">
-    <div class="logo">Drishti<span>AI</span></div>
-    <div style="font-size:13px;color:#7a8aab;">Retinal Disease Detection System</div>
-  </nav>
-
-  <div class="container" style="max-width:480px;">
-    <div class="card">
-      <h1>Welcome Back 👁️</h1>
-      <p class="subtitle">Login to access the DrishtiAI diagnostic system</p>
-
-      <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" id="name" placeholder="Dr. Anandi Sharma"/>
-      </div>
-      <div class="form-group">
-        <label>Role</label>
-        <select id="role">
-          <option value="">Select your role</option>
-          <option>Doctor</option>
-          <option>Radiologist</option>
-          <option>Researcher</option>
-          <option>Student</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Hospital / Institution</label>
-        <input type="text" id="hospital" placeholder="AIIMS, Mumbai"/>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="brand-icon">👁️</div>
+        <div class="logo">Drishti<span>AI</span></div>
       </div>
 
-      <button class="btn" onclick="handleLogin()">Continue to Dashboard →</button>
+      <div class="card">
+        <h1>Welcome back</h1>
+        <p class="subtitle">Sign in to access the retinal diagnostic system</p>
+
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="name" placeholder="Dr. Anandi Sharma"/>
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select id="role">
+            <option value="">Select your role</option>
+            <option>Doctor</option>
+            <option>Radiologist</option>
+            <option>Researcher</option>
+            <option>Student</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Hospital / Institution</label>
+          <input type="text" id="hospital" placeholder="AIIMS, Mumbai"/>
+        </div>
+
+        <button class="btn" onclick="handleLogin()">Continue to Dashboard →</button>
+      </div>
     </div>
   </div>
 

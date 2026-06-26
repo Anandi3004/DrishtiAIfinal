@@ -8,33 +8,63 @@
 </head>
 <body>
   <nav class="navbar">
-    <div class="logo">Drishti<span>AI</span></div>
-    <div id="user-info" style="font-size:13px;color:#7a8aab;"></div>
+    <div class="brand">
+      <div class="brand-icon">👁️</div>
+      <div class="logo">Drishti<span>AI</span></div>
+    </div>
+    <div class="nav-right">
+      <div class="nav-links">
+        <a href="/upload.html" class="active">New Scan</a>
+        <a href="/history.html">History</a>
+      </div>
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar">A</div>
+        <span id="user-info"></span>
+      </div>
+    </div>
   </nav>
 
-  <div class="container" style="max-width:600px;">
-    <div class="card">
-      <h1>Upload Retinal Image 🔬</h1>
-      <p class="subtitle">Upload a fundus photograph for AI-powered disease detection</p>
+  <div class="page-wrap" style="max-width: 620px;">
+    <div class="page-header">
+      <h1>New Retinal Scan</h1>
+      <p>Upload a fundus photograph for AI-powered disease screening</p>
+    </div>
 
+    <div class="card">
       <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
-        <div class="icon">📤</div>
-        <p>Click to upload or drag & drop</p>
-        <p style="margin-top:8px;font-size:13px;"><span>JPG, PNG, JPEG</span> supported</p>
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 16V4m0 0L7 9m5-5l5 5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5 16v2a2 2 0 002 2h10a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p class="main">Drop your retinal image here</p>
+        <p>or <span>click to browse</span> · JPG, PNG up to 10MB</p>
       </div>
 
       <input type="file" id="file-input" accept=".jpg,.jpeg,.png" style="display:none;" onchange="handleFile(event)"/>
 
       <div id="preview-box">
-        <img id="preview-img" src="" alt="Preview"/>
-        <p style="margin-top:10px;color:#66bb6a;font-size:13px;">✓ Image loaded successfully</p>
+        <div class="preview-frame">
+          <img id="preview-img" src="" alt="Preview"/>
+        </div>
+        <div class="preview-status">
+          <span>✓</span> Image loaded — ready to analyze
+        </div>
       </div>
 
-      <button class="btn" onclick="analyzeImage()">Analyze Image →</button>
+      <div class="disease-chip-row">
+        <span class="disease-chip">Diabetic Retinopathy</span>
+        <span class="disease-chip">Glaucoma</span>
+        <span class="disease-chip">Cataract</span>
+        <span class="disease-chip">Age-related Macular Degeneration</span>
+        <span class="disease-chip">Normal</span>
+      </div>
 
-      <div class="loading" id="loading">
+      <button class="btn" onclick="analyzeImage()">Analyze Image</button>
+
+      <div class="loading-box" id="loading">
         <div class="spinner"></div>
-        <p>Analyzing retinal image with AI... please wait</p>
+        <p>Analyzing retinal image with AI</p>
+        <p class="sub">Running inference and generating Grad-CAM heatmap…</p>
       </div>
     </div>
   </div>
@@ -42,14 +72,20 @@
   <script>
     const user = JSON.parse(sessionStorage.getItem('drishti_user') || '{}');
     if (!user.name) window.location.href = '/';
-    document.getElementById('user-info').textContent = user.name + ' · ' + user.role;
+    document.getElementById('user-info').textContent = user.name;
+    document.getElementById('user-avatar').textContent = user.name.charAt(0).toUpperCase();
 
     const uploadArea = document.getElementById('upload-area');
-    uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = '#4fc3f7'; });
-    uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = '#1e2a45'; });
-    uploadArea.addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if(f) loadPreview(f); });
+    uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+    uploadArea.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadArea.classList.remove('drag-over');
+      const f = e.dataTransfer.files[0];
+      if (f) loadPreview(f);
+    });
 
-    function handleFile(e) { const f = e.target.files[0]; if(f) loadPreview(f); }
+    function handleFile(e) { const f = e.target.files[0]; if (f) loadPreview(f); }
 
     function loadPreview(file) {
       const reader = new FileReader();
@@ -71,14 +107,17 @@
 
       const formData = new FormData();
       formData.append('image', file);
+      formData.append('patient_name', user.name);
+      formData.append('role', user.role);
+      formData.append('hospital', user.hospital);
 
       fetch('/analyze', { method: 'POST', body: formData })
         .then(res => res.json())
         .then(data => {
           sessionStorage.setItem('drishti_result', JSON.stringify(data));
-          window.location.href = '/result.html';
+          window.location.href = '/result.html?id=' + data.report_id;
         })
-        .catch(err => {
+        .catch(() => {
           alert('Error connecting to backend. Make sure Flask is running.');
           document.getElementById('loading').style.display = 'none';
           document.querySelector('.btn').disabled = false;
